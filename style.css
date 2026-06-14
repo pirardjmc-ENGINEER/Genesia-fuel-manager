@@ -1,9 +1,13 @@
+* {
+  box-sizing: border-box;
+}
+
 body {
   margin: 0;
   padding: 20px;
-  font-family: Arial, sans-serif;
   background: #0f1720;
-  color: white;
+  color: #ffffff;
+  font-family: Arial, Helvetica, sans-serif;
 }
 
 .app {
@@ -18,23 +22,26 @@ h1 {
 
 .subtitle {
   text-align: center;
-  color: #b0bec5;
-  margin-bottom: 25px;
+  color: #b8c2cc;
+  margin-bottom: 20px;
 }
 
 .menu {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  display: flex;
+  flex-wrap: wrap;
   gap: 10px;
   margin-bottom: 20px;
 }
 
 .menu button {
+  flex: 1;
+  min-width: 140px;
   padding: 14px;
   border: none;
   border-radius: 10px;
   background: #00b894;
   color: white;
+  font-size: 15px;
   font-weight: bold;
   cursor: pointer;
 }
@@ -45,6 +52,55 @@ h1 {
 
 .card {
   background: #1b2838;
-  border-radius: 12px;
+  border-radius: 14px;
   padding: 20px;
+  margin-bottom: 20px;
+}
+
+.tab-content {
+  display: none;
+}
+
+.tab-content.active {
+  display: block;
+}
+
+label {
+  display: block;
+  margin-top: 15px;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+select,
+input {
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  border: none;
+  font-size: 16px;
+}
+
+.action {
+  width: 100%;
+  margin-top: 18px;
+  padding: 14px;
+  border: none;
+  border-radius: 10px;
+  background: #0984e3;
+  color: white;
+  font-size: 17px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.result {
+  margin-top: 18px;
+  padding: 15px;
+  border-radius: 10px;
+  background: #101820;
+  color: #00e6b8;
+  font-size: 18px;
+  font-weight: bold;
+  text-align: center;
 }
