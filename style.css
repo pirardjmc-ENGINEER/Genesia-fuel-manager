@@ -1,0 +1,50 @@
+body {
+  margin: 0;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+  background: #0f1720;
+  color: white;
+}
+
+.app {
+  max-width: 900px;
+  margin: auto;
+}
+
+h1 {
+  text-align: center;
+  margin-bottom: 5px;
+}
+
+.subtitle {
+  text-align: center;
+  color: #b0bec5;
+  margin-bottom: 25px;
+}
+
+.menu {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.menu button {
+  padding: 14px;
+  border: none;
+  border-radius: 10px;
+  background: #00b894;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.menu button:hover {
+  opacity: 0.9;
+}
+
+.card {
+  background: #1b2838;
+  border-radius: 12px;
+  padding: 20px;
+}
