@@ -1,30 +1,30 @@
 let currentROB = null;
 
 function showTab(tabId) {
-  document.querySelectorAll(".tab-content").forEach(tab => {
-    tab.classList.remove("active");
-  });
+  document.querySelectorAll(".tab-content").forEach(tab => tab.classList.remove("active"));
   document.getElementById(tabId).classList.add("active");
 }
 
 function interpolateFromMM(table, mm) {
-  if (mm <= table[0][0]) {
-    return {
-      mm: table[0][0],
-      percent: table[0][1],
-      litres: table[0][2] * 1000,
-      warning: "Sous minimum table"
-    };
+  const maxMM = table[table.length - 1][0];
+
+  if (mm < 0) {
+    return { mm: 0, percent: 0, litres: 0, warning: "Valeur impossible : sonde négative", invalid: true };
   }
 
-  if (mm >= table[table.length - 1][0]) {
+  if (mm > maxMM) {
     const last = table[table.length - 1];
     return {
       mm: last[0],
       percent: last[1],
       litres: last[2] * 1000,
-      warning: "Au-dessus maximum table"
+      warning: `Valeur impossible : sonde entrée ${mm.toFixed(0)} mm / max ${maxMM.toFixed(0)} mm`,
+      invalid: true
     };
+  }
+
+  if (mm <= table[0][0]) {
+    return { mm: table[0][0], percent: table[0][1], litres: table[0][2] * 1000, warning: "Sous minimum table", invalid: false };
   }
 
   for (let i = 0; i < table.length - 1; i++) {
@@ -37,7 +37,8 @@ function interpolateFromMM(table, mm) {
         mm,
         percent: a[1] + ratio * (b[1] - a[1]),
         litres: (a[2] + ratio * (b[2] - a[2])) * 1000,
-        warning: ""
+        warning: "",
+        invalid: false
       };
     }
   }
@@ -45,24 +46,25 @@ function interpolateFromMM(table, mm) {
 
 function interpolateFromLitres(table, litres) {
   const converted = table.map(row => [row[0], row[1], row[2] * 1000]);
+  const maxL = converted[converted.length - 1][2];
 
-  if (litres <= converted[0][2]) {
-    return {
-      mm: converted[0][0],
-      percent: converted[0][1],
-      litres: converted[0][2],
-      warning: "Sous minimum table"
-    };
+  if (litres < 0) {
+    return { mm: 0, percent: 0, litres: 0, warning: "Valeur impossible : litres négatifs", invalid: true };
   }
 
-  if (litres >= converted[converted.length - 1][2]) {
+  if (litres > maxL) {
     const last = converted[converted.length - 1];
     return {
       mm: last[0],
       percent: last[1],
       litres: last[2],
-      warning: "Au-dessus capacité max"
+      warning: `Valeur impossible : ${litres.toFixed(0)} L entrés / capacité max ${maxL.toFixed(0)} L`,
+      invalid: true
     };
+  }
+
+  if (litres <= converted[0][2]) {
+    return { mm: converted[0][0], percent: converted[0][1], litres: converted[0][2], warning: "Sous minimum table", invalid: false };
   }
 
   for (let i = 0; i < converted.length - 1; i++) {
@@ -75,7 +77,8 @@ function interpolateFromLitres(table, litres) {
         mm: a[0] + ratio * (b[0] - a[0]),
         percent: a[1] + ratio * (b[1] - a[1]),
         litres,
-        warning: ""
+        warning: "",
+        invalid: false
       };
     }
   }
@@ -132,13 +135,14 @@ function calculateConversion() {
   }
 
   const data = calculateByMode(tankKey, mode, value);
+  const warningColor = data.invalid ? "#ff6b6b" : "#ffcc66";
 
   result.innerHTML = `
     ${tanks[tankKey].name}<br>
     ${data.litres.toFixed(0)} L<br>
     ${data.mm.toFixed(0)} mm<br>
     ${data.percent.toFixed(1)} %
-    ${data.warning ? `<br><span style="color:#ffcc66">${data.warning}</span>` : ""}
+    ${data.warning ? `<br><span style="color:${warningColor}">${data.warning}</span>` : ""}
   `;
 }
 
@@ -146,12 +150,13 @@ function getROBFromInputs(prefix) {
   let total = 0;
   let capacity = 0;
   const details = [];
+  const errors = [];
 
   for (const key in tanks) {
     const mode = document.getElementById(`${prefix}_mode_${key}`).value;
     const value = parseFloat(document.getElementById(`${prefix}_value_${key}`).value);
 
-    let data = { litres: 0, mm: 0, percent: 0, warning: "" };
+    let data = { litres: 0, mm: 0, percent: 0, warning: "", invalid: false };
 
     if (!isNaN(value)) {
       data = calculateByMode(key, mode, value);
@@ -161,6 +166,10 @@ function getROBFromInputs(prefix) {
     total += data.litres;
     capacity += max;
 
+    if (data.invalid) {
+      errors.push(`${tanks[key].name} : ${data.warning}`);
+    }
+
     details.push({
       key,
       name: tanks[key].name,
@@ -168,11 +177,12 @@ function getROBFromInputs(prefix) {
       mm: data.mm,
       percent: data.percent,
       capacity: max,
-      warning: data.warning
+      warning: data.warning,
+      invalid: data.invalid
     });
   }
 
-  return { total, capacity, details };
+  return { total, capacity, details, errors };
 }
 
 function calculateROB() {
@@ -185,7 +195,7 @@ function calculateROB() {
   rob.details.forEach(tank => {
     rows += `
       <tr>
-        <td>${tank.name}</td>
+        <td>${tank.invalid ? "🚨 " : ""}${tank.name}</td>
         <td>${tank.litres.toFixed(0)} L</td>
         <td>${tank.mm.toFixed(0)} mm</td>
         <td>${tank.percent.toFixed(1)} %</td>
@@ -193,10 +203,21 @@ function calculateROB() {
     `;
   });
 
+  let errorBlock = "";
+  if (rob.errors.length > 0) {
+    errorBlock = `
+      <div style="color:#ff6b6b; margin-top:12px;">
+        🚨 Valeur impossible détectée :<br>
+        ${rob.errors.join("<br>")}
+      </div>
+    `;
+  }
+
   document.getElementById("robResult").innerHTML = `
     ROB TOTAL : ${rob.total.toFixed(0)} L<br>
     ${globalPercent.toFixed(1)} % global<br>
     Capacité restante : ${(rob.capacity - rob.total).toFixed(0)} L
+    ${errorBlock}
     <table>
       <tr><th>Tank</th><th>L</th><th>mm</th><th>%</th></tr>
       ${rows}
@@ -224,8 +245,22 @@ function calculateBunker() {
 
   const finalROB = rob.total + planned;
 
+  let errorBlock = "";
+  if (rob.errors.length > 0) {
+    errorBlock = `
+      <div style="color:#ff6b6b; margin-top:12px;">
+        🚨 Calcul à vérifier : valeur impossible détectée<br>
+        ${rob.errors.join("<br>")}
+      </div>
+    `;
+  }
+
   let alert = "";
-  if (planned <= remainingSafe) {
+  if (rob.errors.length > 0) {
+    alert = `<span style="color:#ff6b6b">Corrige d'abord les valeurs impossibles avant validation bunker.</span>`;
+  } else if (planned < 0) {
+    alert = `<span style="color:#ff6b6b">Quantité prévue impossible : valeur négative.</span>`;
+  } else if (planned <= remainingSafe) {
     alert = `<span style="color:#00e6b8">OK : avitaillement sous limite sécurité.</span>`;
   } else if (planned <= remainingFull) {
     alert = `<span style="color:#ffcc66">Attention : dépasse marge sécurité de ${(planned - remainingSafe).toFixed(0)} L.</span>`;
@@ -240,6 +275,7 @@ function calculateBunker() {
     Max avant plein théorique : ${remainingFull.toFixed(0)} L<br>
     ROB final prévu : ${finalROB.toFixed(0)} L<br><br>
     ${alert}
+    ${errorBlock}
   `;
 }
 
@@ -286,10 +322,19 @@ function updateDashboard(rob) {
     </div>
   `;
 
+  if (rob.errors && rob.errors.length > 0) {
+    html += `
+      <div style="color:#ff6b6b; margin-top:12px;">
+        🚨 Valeur impossible détectée<br>
+        ${rob.errors.join("<br>")}
+      </div>
+    `;
+  }
+
   rob.details.forEach(tank => {
     html += `
       <p>
-        <strong>${tank.name}</strong><br>
+        <strong>${tank.invalid ? "🚨 " : ""}${tank.name}</strong><br>
         ${tank.litres.toFixed(0)} L - ${tank.mm.toFixed(0)} mm - ${tank.percent.toFixed(1)} %
       </p>
     `;
