@@ -1,36 +1,90 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Genesia Fuel Manager</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-
   <div class="app">
     <h1>🚢 Genesia Fuel Manager</h1>
-    <p class="subtitle">Version 2 - Développement</p>
+    <p class="subtitle">ROB / Avitaillement / Charter</p>
 
     <div class="menu">
-      <button>Sonde ➜ Litres</button>
-      <button>Litres ➜ Sonde</button>
-      <button>ROB</button>
-      <button>Avitaillement</button>
-      <button>Charter</button>
+      <button onclick="showTab('dashboard')">Dashboard</button>
+      <button onclick="showTab('convert')">Conversion</button>
+      <button onclick="showTab('rob')">ROB</button>
+      <button onclick="showTab('bunker')">Avitaillement</button>
+      <button onclick="showTab('charter')">Charter</button>
     </div>
 
-    <div class="card">
-      <h2>Bienvenue</h2>
-      <p>
-        Cette nouvelle version servira de base pour toutes les fonctionnalités :
-        conversion mm ↔ litres, ROB, avitaillement sécurisé et suivi charter.
-      </p>
-    </div>
+    <section id="dashboard" class="card tab-content active">
+      <h2>Dashboard</h2>
+      <div id="dashboardContent">Renseigne le ROB pour afficher le résumé.</div>
+    </section>
+
+    <section id="convert" class="card tab-content">
+      <h2>Conversion</h2>
+
+      <label>Tank</label>
+      <select id="convertTank"></select>
+
+      <label>Mode</label>
+      <select id="convertMode">
+        <option value="mm">Sonde mm ➜ litres</option>
+        <option value="litres">Litres ➜ sonde mm</option>
+      </select>
+
+      <label>Valeur</label>
+      <input id="convertValue" type="number" placeholder="Ex : 750 ou 4500" />
+
+      <button class="action" onclick="calculateConversion()">Calculer</button>
+      <div id="convertResult" class="result">Entre une valeur.</div>
+    </section>
+
+    <section id="rob" class="card tab-content">
+      <h2>ROB actuel</h2>
+      <div id="robInputs"></div>
+      <button class="action" onclick="calculateROB()">Calculer ROB</button>
+      <div id="robResult" class="result">Entre les valeurs des tanks.</div>
+    </section>
+
+    <section id="bunker" class="card tab-content">
+      <h2>Avitaillement sécurisé</h2>
+      <div id="bunkerInputs"></div>
+
+      <label>Marge sécurité (%)</label>
+      <input id="securityMargin" type="number" value="5" />
+
+      <label>Quantité prévue à embarquer (L)</label>
+      <input id="bunkerQty" type="number" placeholder="Ex : 8000" />
+
+      <button class="action" onclick="calculateBunker()">Calculer</button>
+      <div id="bunkerResult" class="result">Entre les valeurs actuelles.</div>
+    </section>
+
+    <section id="charter" class="card tab-content">
+      <h2>Consommation charter</h2>
+
+      <label>Date début</label>
+      <input id="dateStart" type="date" />
+
+      <label>ROB début (L)</label>
+      <input id="robStart" type="number" placeholder="Ex : 42000" />
+
+      <label>Date fin</label>
+      <input id="dateEnd" type="date" />
+
+      <label>ROB fin (L)</label>
+      <input id="robEnd" type="number" placeholder="Ex : 28500" />
+
+      <button class="action" onclick="calculateCharter()">Calculer conso</button>
+      <div id="charterResult" class="result">Entre les ROB début et fin.</div>
+    </section>
   </div>
 
   <script src="tables.js"></script>
   <script src="script.js"></script>
-
 </body>
 </html>
